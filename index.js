@@ -9,25 +9,11 @@ const app = express();
 app.use(express.json());
 app.use(require("morgan")("dev"));
 
-app.post("/api/shop", async (req, res, next) => {
-  try {
-    const SQL = `
-    INSERT INTO shop(name) 
-    VALUES($1) 
-    RETURNING *
-    `;
-    const response = await client.query(SQL, [req.body.text]);
-    res.send(response.rows[0]);
-  } catch (error) {
-    next(error);
-  }
-});
-
 app.get("/api/shop", async (req, res, next) => {
   try {
     const SQL = `
-    SELECT * from shop ORDER BY created_at DESC;
-    `;
+      SELECT * from shop ORDER BY created_at DESC;
+      `;
     const response = await client.query(SQL);
     res.send(response.rows);
   } catch (error) {
@@ -35,10 +21,28 @@ app.get("/api/shop", async (req, res, next) => {
   }
 });
 
-app.put("/api/shop/:id", async (req, res, next) => {
+app.get("/api/shop/:id", async (req, res, next) => {
   try {
-    const SQL = ``;
+    const SQL = `
+      SELECT * from shop 
+      WHERE id = 1
+      `;
     const response = await client.query(SQL);
+    res.send(response.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/shop", async (req, res, next) => {
+  try {
+    const SQL = `
+        INSERT INTO shop(name, is_favorite) 
+        VALUES('Sherbert', $1)
+        RETURNING *
+        `;
+    const response = await client.query(SQL, [req.body.txt]);
+    res.send(response.rows[0]);
   } catch (error) {
     next(error);
   }
@@ -47,13 +51,27 @@ app.put("/api/shop/:id", async (req, res, next) => {
 app.delete("/api/shop/:id", async (req, res, next) => {
   try {
     const SQL = `
-    DELETE from shop
-    WHERE id = 
-    `;
+      DELETE from shop
+      WHERE id = 3
+      `;
     const response = await client.query(SQL);
     res.sendStatus(204);
   } catch (error) {
     next(error);
+  }
+});
+
+app.put("/api/shop/:id", async (req, res, next) => {
+  try {
+    const SQL = `
+      UPDATE shop
+      SET name=$1, updated_at= now()
+      WHERE id=$2 RETURNING *
+    `;
+    const response = await client.query(SQL, [req.body.txt, req.params.id]);
+    res.send(response.rows[0]);
+  } catch (ex) {
+    next(ex);
   }
 });
 
@@ -63,7 +81,7 @@ const init = async () => {
   let SQL = `
   DROP TABLE IF EXISTS shop;
   CREATE TABLE shop(
-    id SERIAL PRIMARY KEY,
+    id serial PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     is_favorite BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT now(),
